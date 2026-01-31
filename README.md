@@ -4,7 +4,7 @@ A lightweight reverse shell written in C from scratch. Built as an educational p
 
 ## ⚠️ Disclaimer
 
-This project is built strictly for **educational purposes** as part of coursework in an NSA/DHS designated Center of Academic Excellence in Cyber Operations (CAE-CO) program. It is intended for use in controlled lab environments only. Do not use this tool against systems you do not own or have explicit written authorization to test. Unauthorized access to computer systems is illegal.
+This project is built strictly for **educational purposes** as a personal project by a student in an NSA/DHS designated Center of Academic Excellence in Cyber Operations (CAE-CO) program. It is intended for use in controlled lab environments only. Do not use this tool against systems you do not own or have explicit written authorization to test. Unauthorized access to computer systems is illegal.
 
 ## What This Is
 

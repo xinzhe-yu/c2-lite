@@ -1,0 +1,137 @@
+
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include "server.h"
+#include <unistd.h>
+
+int socket_create(int domain, int type){
+    int fd = socket(domain, type, 0);
+    if (fd < 0) {
+        perror("Socket");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    int opt = 1; 
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    return fd;
+}
+
+
+void server_bind(int fd, int domain, uint16_t port){
+    /* Structure used for IPv4 socket addressing */
+    struct sockaddr_in server_addr; 
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = domain;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    if(bind(fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0){
+        perror("Bind");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+void server_listen(int fd, int backlog){
+    if(listen(fd, backlog) < 0){
+        perror("Listen");
+        exit(EXIT_FAILURE);
+    }
+    printf("Waiting for connection...\n\n");
+}
+
+
+int server_accept(int fd){
+    struct sockaddr_in client_addr;
+    memset(&client_addr, 0, sizeof(client_addr));
+    socklen_t client_addr_len = sizeof(client_addr);
+
+    /* Blocks until connect */
+    int client_fd = accept(fd, (struct sockaddr *)&client_addr, &client_addr_len);
+    if (client_fd < 0){
+        perror("accept");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    printf("Client connected!\n"); 
+    return client_fd;
+}
+
+
+void session_handle(int fd){
+    char text[] = "$ ";
+    write(STDOUT_FILENO, text, sizeof(text));
+
+    while(1){ 
+        /* Create fresh fd_sets */
+        fd_set readfds;
+        FD_ZERO(&readfds);
+
+        /* Add Fds to watch */
+        FD_SET(STDIN_FILENO, &readfds);
+        FD_SET(fd, &readfds);
+
+        /* Find max Fd */
+        int maxfd = fd;
+
+        /* Block until something is ready */
+        int ready = select(maxfd + 1, &readfds, NULL, NULL, NULL);
+
+        if (ready < 0) {
+            perror("Select");
+            break;
+        }
+
+        /* Check which Fds are ready */
+        if (FD_ISSET(STDIN_FILENO, &readfds)){
+            /* read from terminal */
+            char buf[4096];
+            ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
+            if (n <= 0) break;
+            /* send to client */
+            write(fd, buf, n);
+        }
+
+        if(FD_ISSET(fd, &readfds)){
+            char buf[4096];
+            ssize_t n = read(fd, buf, sizeof(buf));
+            if (n <= 0) break;
+            write(STDOUT_FILENO, buf, n);
+
+            char text[] = "$ ";
+            write(STDOUT_FILENO, text, sizeof(text));
+        }
+    }
+    close(fd);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

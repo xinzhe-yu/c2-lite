@@ -10,21 +10,21 @@ This project is built strictly for **educational purposes** as a personal projec
 
 A reverse shell consisting of two binaries:
 
-- **Server (listener)** — accepts incoming connections, forks a child process per session, and provides an interactive operator interface using `select()` for multiplexed I/O
-- **Client (implant)** — connects back to the server, redirects standard file descriptors to the socket, and spawns a shell via `execve`
+- **Server (listener)** — accepts incoming connections, manages multiple sessions with an interactive command interface (`list`, `interact`, `kill`), and uses `select()` for multiplexed I/O between operator input and client connections
+- **Client (implant)** — runs as a daemon, automatically reconnects to the server on disconnect, redirects standard file descriptors to the socket, and spawns a shell via `execve`
 
 ## Project Structure
 
 ```
 c2-lite/
 ├── server/
-│   ├── main.c          # server entry point, fork logic
+│   ├── main.c          # server entry point, session manager, select() loop
 │   ├── server.c         # socket, bind, listen, accept
 │   ├── server.h
-│   ├── session.c        # interactive select() loop
-│   └── session.h
+│   ├── command.c        # command dispatcher (list, interact, kill)
+│   └── command.h
 ├── client/
-│   ├── main.c          # client entry point, reconnect loop, execve
+│   ├── main.c          # client entry point, daemon mode, reconnect loop, execve
 │   ├── client.c         # socket creation, connect
 │   └── client.h
 ├── common/
@@ -54,19 +54,32 @@ Start the listener:
 ./build/server
 ```
 
+The server provides an interactive prompt (`c2>`) with commands:
+- `list` — show all active sessions
+- `interact <id>` — interact with a specific session
+- `kill <id>` — terminate a session
+
 Run the implant (update `SERVER_IP` in `client/main.c` before building):
 
 ```bash
 ./build/client
 ```
 
+The client automatically:
+- Backgrounds itself as a daemon process
+- Reconnects every 3 seconds if the connection drops
+- Redirects all I/O to `/dev/null` for stealth
+
 ## Concepts Practiced
 
 - Multi-file C project structure with headers and separate compilation
 - POSIX socket programming (TCP client/server)
-- Process management with `fork()`, `execve()`, `waitpid()`
+- Process management with `fork()`, `execve()`, `waitpid()`, `setsid()`
+- Daemon process creation and backgrounding
 - I/O multiplexing with `select()`
 - File descriptor manipulation with `dup2()`
+- Session management and command dispatching
+- Automatic reconnection logic
 - Makefile build systems with pattern rules and separate targets
 
 ## License

@@ -18,18 +18,26 @@ A reverse shell consisting of two binaries:
 ```
 c2-lite/
 ├── server/
-│   ├── main.c          # server entry point, session manager, select() loop
-│   ├── server.c         # socket, bind, listen, accept
-│   ├── server.h
-│   ├── command.c        # command dispatcher (list, interact, kill)
-│   └── command.h
+│   ├── src/
+│   │   ├── main.c          # server entry point, select() loop
+│   │   ├── server.c        # socket, bind, listen, accept, interactive shell handler
+│   │   ├── session.c       # client list manager (opaque struct, add/remove/get API)
+│   │   ├── command.c       # command dispatcher (list, interact, kill)
+│   │   └── terminal.c      # raw terminal mode helpers
+│   └── include/
+│       ├── server.h
+│       ├── session.h       # client list public API (opaque client_list_t)
+│       ├── command.h
+│       └── terminal.h
 ├── client/
-│   ├── main.c          # client entry point, daemon mode, reconnect loop, execve
-│   ├── client.c         # socket creation, connect
-│   └── client.h
+│   ├── src/
+│   │   ├── main.c          # client entry point, daemon mode, reconnect loop, execve
+│   │   └── client.c        # socket creation, connect
+│   └── include/
+│       └── client.h
 ├── common/
-│   └── common.h        # shared constants (port, buffer size)
-├── Makefile
+│   └── common.h            # shared constants (port, buffer size)
+├── makefile
 └── README.md
 ```
 
@@ -42,8 +50,7 @@ make
 Binaries output to `build/`.
 
 ```bash
-make clean    # remove object files and binaries
-make debug    # build with debug symbols
+make clean    # remove build directory
 ```
 
 ## Usage
@@ -51,7 +58,7 @@ make debug    # build with debug symbols
 Start the listener:
 
 ```bash
-./build/server
+./build/server_bin
 ```
 
 The server provides an interactive prompt (`c2>`) with commands:
@@ -62,7 +69,7 @@ The server provides an interactive prompt (`c2>`) with commands:
 Run the implant (update `SERVER_IP` in `client/main.c` before building):
 
 ```bash
-./build/client
+./build/client_bin
 ```
 
 The client automatically:
@@ -72,15 +79,17 @@ The client automatically:
 
 ## Concepts Practiced
 
-- Multi-file C project structure with headers and separate compilation
+- Multi-file C project structure with `src/`/`include/` layout and separate compilation
+- Encapsulation via opaque data structures and clean C APIs (forward declarations, accessor functions)
 - POSIX socket programming (TCP client/server)
 - Process management with `fork()`, `execve()`, `waitpid()`, `setsid()`
 - Daemon process creation and backgrounding
 - I/O multiplexing with `select()`
 - File descriptor manipulation with `dup2()`
-- Session management and command dispatching
+- Client session management with persistent IDs and command dispatching
+- Raw terminal mode with `termios`
 - Automatic reconnection logic
-- Makefile build systems with pattern rules and separate targets
+- Makefile build systems with pattern rules, dependency tracking (`-MMD`), and order-only prerequisites
 
 ## License
 

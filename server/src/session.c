@@ -44,9 +44,11 @@ void client_list_print(client_list_t *list){
 
 
 client_info_t* client_list_get(client_list_t *list, int index){
-    if (index <= list->count){
+    if (index < list->count){
         return &(list->items[index]);
     }
+
+    return NULL;
     
 }
 

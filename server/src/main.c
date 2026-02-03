@@ -9,8 +9,9 @@
 #include "../common/common.h"
 #include "server.h"
 #include "command.h"
+#include "terminal.h"
+#include "session.h"
 
-#define MAX_SESSIONS 16
 
 int main(){
 
@@ -18,9 +19,8 @@ int main(){
     server_bind(server_fd, AF_INET, PORT);
     server_listen(server_fd, 10);
 
-    session_info session_list[MAX_SESSIONS]; 
-    int session_list_len = 0;
-
+    client_list_t *client_list = client_list_init();
+    
 
     while(1){
 
@@ -40,11 +40,10 @@ int main(){
 
         if (FD_ISSET(server_fd, &readfds)) {
             // new client connecting
-            session_info session;
-            if(server_accept(server_fd, &session) < 0) continue;
-            session_list[session_list_len] = session;
-            session_list_len++;
-            printf("\n[*] New session %d from %s:%d\n", session_list_len - 1, session.ip, session.port);
+            client_info_t client_data;
+            if(server_accept(server_fd, &client_data) < 0) continue;
+            client_list_append(client_list, client_data);
+
         }
 
         if (FD_ISSET(STDIN_FILENO, &readfds)) {
@@ -54,10 +53,8 @@ int main(){
             if (n <= 0) break;
             cmd[n] = '\0';
             
-            write(STDOUT_FILENO, cmd, (size_t)n);
-
-            // parse command here
-            cmd_dispatch(cmd, session_list, session_list_len);
+            /* Parse command here */
+            cmd_dispatch(cmd, client_list);
         }
     }
 

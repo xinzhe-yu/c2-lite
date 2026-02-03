@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+#define CTRL_Z   0x1a  
+
 int socket_create(int domain, int type){
     int fd = socket(domain, type, 0);
     if (fd < 0) {
@@ -47,7 +49,7 @@ void server_listen(int fd, int backlog){
 
 
 
-int server_accept(int fd, session_info *session){
+int server_accept(int fd, client_info_t *client){
     struct sockaddr_in client_addr;
     memset(&client_addr, 0, sizeof(client_addr));
     socklen_t client_addr_len = sizeof(client_addr);
@@ -61,16 +63,16 @@ int server_accept(int fd, session_info *session){
     }
     printf("Client connected!\n"); 
 
-    inet_ntop(AF_INET, &client_addr.sin_addr, session->ip, INET_ADDRSTRLEN);
-    session->port = ntohs(client_addr.sin_port);
-    session->client_fd = client_fd;
-    session->active = 1;
+    inet_ntop(AF_INET, &client_addr.sin_addr, client->ip, INET_ADDRSTRLEN);
+    client->port = ntohs(client_addr.sin_port);
+    client->client_fd = client_fd;
+    client->active = 1;
 
     return 0;
 }
 
 
-void session_handle(int fd){
+void client_handle(int fd){
     char text[] = "$ ";
     write(STDOUT_FILENO, text, sizeof(text));
 
@@ -100,6 +102,18 @@ void session_handle(int fd){
             char buf[4096];
             ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
             if (n <= 0) break;
+
+            if (n == 1){
+                switch(buf[0]) {
+            
+                    case CTRL_Z:
+                        /* Background */
+                        printf("\n[*] Backgrounding session\n");
+                        return;
+                    /* Room for expansion */
+                }
+            }
+
             /* send to client */
             write(fd, buf, n);
         }
@@ -114,7 +128,6 @@ void session_handle(int fd){
             write(STDOUT_FILENO, text, sizeof(text));
         }
     }
-    close(fd);
 }
 
 

@@ -4,3 +4,5 @@ build/
 client/client-http.c
 client/temp-client.c
 server/temp-server.c
+CLAUDE.md
+road_map.md

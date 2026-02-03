@@ -53,6 +53,7 @@ int main(){
             break;
         }
 
+        /* Watches incoming connection */
         if (FD_ISSET(server_fd, &readfds)) {
             // new client connecting
             client_info_t client_data;
@@ -61,6 +62,7 @@ int main(){
 
         }
 
+        /* Watches STDIN */
         if (FD_ISSET(STDIN_FILENO, &readfds)) {
             // operator typed a command
             char cmd[256];
@@ -71,6 +73,8 @@ int main(){
             /* Parse command here */
             cmd_dispatch(cmd, client_list);
         }
+
+        //Still hasnt fixed select.
     }
 
     close(server_fd);

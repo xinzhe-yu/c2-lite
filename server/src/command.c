@@ -8,11 +8,7 @@
 
 
 void cmd_list(client_list_t *client_list){
-    for(int i = 0; i < client_list_count(client_list); i++){
-        if (client_list_get(client_list, i)->active == 1){
-            printf("\n[%d] %s:%d\n", i, client_list_get(client_list, i)->ip, client_list_get(client_list, i)->port);
-        }
-    }
+    client_list_print(client_list);
 }
 
 void cmd_interact(client_list_t *client_list, int id){
@@ -46,7 +42,6 @@ void cmd_dispatch(char *input, client_list_t *client_list){
         return;
     }
 
-    
     if (strcmp(cmd, "list") == 0) {
         cmd_list(client_list);
     }
@@ -59,6 +54,7 @@ void cmd_dispatch(char *input, client_list_t *client_list){
         int id = atoi(arg);
         cmd_interact(client_list, id);
     }
+
     else if (strcmp(cmd, "kill") == 0) {
         char *arg = strtok_r(NULL, " \n", &saveptr);
         if (arg == NULL) {

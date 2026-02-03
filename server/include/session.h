@@ -20,7 +20,7 @@ typedef struct{
 client_list_t* client_list_init(void);
 void client_list_append(client_list_t *list, client_info_t client_data);
 void client_list_remove(client_list_t *list, int index);
-
+void client_list_print(client_list_t *list);
 
 client_info_t* client_list_get(client_list_t *list, int index);
 int client_list_count(client_list_t *list);

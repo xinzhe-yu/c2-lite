@@ -42,14 +42,14 @@ void client_list_remove(client_list_t *list, int index){
     if (index < 0 || index >= list->count) return;
 
     close(list->items[index].client_fd);
-    list->items[index].active = 0;
+    list->items[index].state = CLIENT_DEAD;
 }
 
 void client_list_print(client_list_t *list){
     if (list == NULL) return;
 
     for(int i = 0; i < list->count; i++){
-        if (list->items[i].active != 0){
+        if (client_is_active(list->items[i].state)) {
             printf("\n[%d] %s:%d\n", i, list->items[i].ip, list->items[i].port);
         }
     }

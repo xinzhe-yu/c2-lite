@@ -15,13 +15,28 @@
 
 int main(){
 
-    int server_fd = socket_create(AF_INET, SOCK_STREAM);
-    server_bind(server_fd, AF_INET, PORT);
-    server_listen(server_fd, 10);
+    int server_fd;
 
+    if(socket_create(AF_INET, SOCK_STREAM, &server_fd) < 0){
+        perror("Socket");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if(server_bind(server_fd, AF_INET, PORT) < 0){
+        perror("Bind");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if(server_listen(server_fd, 10) < 0 ){
+        perror("Listen");
+        exit(EXIT_FAILURE);
+    }
+    
+    /* Client list array will store client_data struct*/
     client_list_t *client_list = client_list_init();
     
-
     while(1){
 
         fd_set readfds;

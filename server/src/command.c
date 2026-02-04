@@ -1,6 +1,4 @@
-
-
-#include "command.h"
+#include "client.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,8 +10,9 @@ void cmd_list(client_list_t *client_list){
 }
 
 void cmd_interact(client_list_t *client_list, int id){
+    if (client_list == NULL) return;
     
-    if(id < 0 || id >= client_list_count(client_list) || client_list_get(client_list, id)->active == 0){
+    if(id < 0 || id >= client_list_count(client_list) || client_is_gone(client_list_get(client_list, id)->state)){
         printf("Invalid Session");
         return;
     }
@@ -22,25 +21,21 @@ void cmd_interact(client_list_t *client_list, int id){
     client_handle(client_list_get(client_list, id)->client_fd);
 }
 
-
-
 void cmd_kill(client_list_t *client_list, int id){
-    if(id < 0 || id >= client_list_count(client_list) || client_list_get(client_list, id)->active == 0){
+    if (client_list == NULL) return;
+
+    if(id < 0 || id >= client_list_count(client_list) || client_is_gone(client_list_get(client_list, id)->state)){
         printf("Invalid Session");
         return;
     }
     client_list_remove(client_list, id);
-    
 }
-
-
 
 void cmd_dispatch(char *input, client_list_t *client_list){
     char *saveptr;
     char *cmd = strtok_r(input, " \n", &saveptr);
-    if (cmd == NULL) {
-        return;
-    }
+    if (client_list == NULL) return;
+    if (cmd == NULL) return;
 
     if (strcmp(cmd, "list") == 0) {
         cmd_list(client_list);

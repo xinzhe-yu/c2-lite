@@ -1,13 +1,14 @@
-
+#include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include "server.h"
 #include <unistd.h>
-#include <arpa/inet.h>
+
+#include "server.h"
+#include "net_loop.c"
 
 #define CTRL_Z   0x1a  
 
@@ -23,7 +24,6 @@ int socket_create(int domain, int type, int *fd){
     return 0;
 }
 
-
 int server_bind(int fd, int domain, uint16_t port){
     /* Structure used for IPv4 socket addressing */
     struct sockaddr_in server_addr; 
@@ -38,7 +38,6 @@ int server_bind(int fd, int domain, uint16_t port){
     return 0;
 }
 
-
 int server_listen(int fd, int backlog){
     if(listen(fd, backlog) < 0){
         return -1;
@@ -46,8 +45,6 @@ int server_listen(int fd, int backlog){
     printf("Waiting for connection...\n\n");
     return 0;
 }
-
-
 
 int server_accept(int fd, client_info_t *client){
     struct sockaddr_in client_addr;
@@ -58,7 +55,7 @@ int server_accept(int fd, client_info_t *client){
     int client_fd = accept(fd, (struct sockaddr *)&client_addr, &client_addr_len);
     if (client_fd < 0){
         perror("accept");
-        close(fd);
+        close(client_fd);
         return -1;
     }
     printf("Client connected!\n"); 
@@ -66,7 +63,7 @@ int server_accept(int fd, client_info_t *client){
     inet_ntop(AF_INET, &client_addr.sin_addr, client->ip, INET_ADDRSTRLEN);
     client->port = ntohs(client_addr.sin_port);
     client->client_fd = client_fd;
-    client->active = 1;
+    client->state = CLIENT_ALIVE;
 
     return 0;
 }

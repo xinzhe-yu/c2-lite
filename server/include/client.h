@@ -1,11 +1,9 @@
-#ifndef SESSION_H
-#define SESSION_H
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #include <stdint.h>
 #include <netinet/in.h>
 #include <stdbool.h>
-
-
 
 typedef struct client_list client_list_t; 
 
@@ -45,9 +43,6 @@ void client_list_print(client_list_t *list);
 
 client_info_t* client_list_get(client_list_t *list, int index);
 int client_list_count(client_list_t *list);
-
-
-
 
 
 

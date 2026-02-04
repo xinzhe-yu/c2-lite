@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "session.h"
+#include "client.h"
 
-#define MAX_SESSIONS 16  
+#define MAX_CLIENTS 16  
 
 struct client_list {
-    client_info_t items[MAX_SESSIONS]; 
+    client_info_t items[MAX_CLIENTS]; 
     int count;
 };
 
@@ -25,7 +25,7 @@ client_list_t* client_list_init(void){
 void client_list_append(client_list_t *list, client_info_t client_data){
     if (list == NULL) return;
 
-    if (list->count > MAX_SESSIONS){
+    if (list->count > MAX_CLIENTS){
         printf("MAX SESSION REACHED");
         return;
     }

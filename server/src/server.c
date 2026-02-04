@@ -8,9 +8,30 @@
 #include <unistd.h>
 
 #include "server.h"
-#include "net_loop.c"
+#include "net_loop.h"
 
 #define CTRL_Z   0x1a  
+
+int socket_setup(int port){
+    int server_fd; 
+    if(socket_create(AF_INET, SOCK_STREAM, &server_fd) < 0){
+        perror("Socket");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+    if(server_bind(server_fd, AF_INET, port) < 0){
+        perror("Bind");
+        close(server_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if(server_listen(server_fd, 10) < 0){
+        perror("Listen");
+        exit(EXIT_FAILURE);
+    }
+
+    return server_fd;
+}
 
 int socket_create(int domain, int type, int *fd){
     int socket_fd = socket(domain, type, 0);

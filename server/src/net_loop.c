@@ -8,6 +8,8 @@
 
 #include "net_loop.h"
 #include "client.h"
+#include "server.h"
+#include "command.h"
 
 #define MAX_FDS 1024
 
@@ -49,7 +51,7 @@ int loop_add_fd(int fd, uint32_t events, fd_callback_t cb, void *ctx){
 
     int slot = -1;
     for (int i = 0; i < MAX_FDS; i++){
-        if (loop_state.entries[i].fd == 0){
+        if (loop_state.entries[i].fd == -1){
             slot = i;
             break;
         }
@@ -103,7 +105,7 @@ void loop_run(void){
     }
 }
 
-int  loop_remove_fd(int client_fd){
+int loop_remove_fd(int client_fd){
     if (client_fd < 0 || client_fd >= MAX_FDS) return -1;
 
     if(epoll_ctl(loop_state.epfd, EPOLL_CTL_DEL, client_fd, NULL) < 0) {
@@ -122,7 +124,7 @@ int  loop_remove_fd(int client_fd){
 }
 
 void loop_stop(void){
-    loop_state.running == 0;
+    loop_state.running = 0;
     if (loop_state.epfd >= 0){
         close(loop_state.epfd);
         loop_state.epfd = -1;
@@ -135,13 +137,47 @@ void loop_stop(void){
 void handle_accept(int fd, uint32_t events, void *ctx){
     // new client connecting
     client_info_t client_data;
-
     if(server_accept(fd, &client_data) < 0){
         perror("socket accept");
     }
-    client_list_append((client_list_t*)ctx, client_data);
+    
+    client_info_t *info = client_list_append(&client_data);
+    if (info == NULL) return;
+
+    loop_add_fd(client_data.client_fd, EPOLLIN, handle_client, info);
 }
 
+void handle_client(int fd, uint32_t events, void *ctx){
+    client_info_t *client_info = (client_info_t *)ctx;
+    
+    // Handle disconnect
+    if (events & (EPOLLHUP | EPOLLERR)) {
+        printf("\n[!] Client %s:%d disconnected\n", client_info->ip, client_info->port);
+        loop_remove_fd(fd);
+        close(fd);
+        client_info->state = CLIENT_DEAD;
+        return;
+    }
+    
+    // Data available - drain it for now (we're not in interact mode)
+    if (events & EPOLLIN) {
+        char buf[4096];
+        ssize_t n = read(fd, buf, sizeof(buf));
+        
+        if (n <= 0) {
+            // Client closed or error
+            printf("\n[!] Client %s:%d disconnected\n", client_info->ip, client_info->port);
+            loop_remove_fd(fd);
+            close(fd);
+            client_info->state = CLIENT_DEAD;
+            return;
+        }
+        
+        // For now: discard the data (no interact mode yet)
+        // Later: buffer it or check if we're interacting
+    }
+
+}
 
 void handle_stdin(int fd, uint32_t events, void *ctx){
     // operator typed a command
@@ -151,13 +187,8 @@ void handle_stdin(int fd, uint32_t events, void *ctx){
     cmd[n] = '\0';
     
     /* Parse command here */
-    cmd_dispatch(cmd, (client_list_t*)ctx);
+    cmd_dispatch(cmd);
 }
-
-void handle_client(int fd, uint32_t events, void *ctx){
-
-}
-
 
 
 

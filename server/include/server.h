@@ -6,7 +6,7 @@
 
 #include "client.h"
 
-
+int socket_setup(int port);
 int socket_create(int domain, int type, int *fd);
 int server_bind(int fd, int domain, uint16_t port);
 int server_listen(int fd, int backlog); 
